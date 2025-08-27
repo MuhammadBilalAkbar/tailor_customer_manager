@@ -6,6 +6,7 @@ import 'controllers/auth_controller.dart';
 import 'controllers/customer_controller.dart';
 import 'controllers/order_controller.dart';
 import 'routes/app_routes.dart';
+import 'views/screens/add_order_screen.dart';
 import 'views/screens/auth/login_screen.dart';
 import 'views/screens/auth/signup_screen.dart';
 import 'views/screens/cusomer/add_customer_screen.dart';
