@@ -11,9 +11,9 @@ import 'routes/app_routes.dart';
 import 'views/order/add_order_screen.dart';
 import 'views/screens/auth/login_screen.dart';
 import 'views/screens/auth/signup_screen.dart';
-import 'views/screens/cusomer/add_customer_screen.dart';
-import 'views/screens/cusomer/customer_details_screen.dart';
-import 'views/screens/cusomer/customer_list_screen.dart';
+import 'views/screens/customer/add_customer_screen.dart';
+import 'views/screens/customer/customer_details_screen.dart';
+import 'views/screens/customer/customer_list_screen.dart';
 import 'views/screens/dashboard_screen.dart';
 import 'views/screens/home_screen.dart';
 
