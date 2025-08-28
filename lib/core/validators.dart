@@ -7,6 +7,7 @@ class Validators {
   static String? email(String? v) {
     if (v == null || v.trim().isEmpty) return 'Email is required';
     final r = RegExp(r'^[\w.\-]+@([\w\-]+\.)+[a-zA-Z]{2,}$');
+    // final r = RegExp(r'^[\w.-]+@([\w-]+\.)+[a-zA-Z]{2,}$');
     if (!r.hasMatch(v.trim())) return 'Enter a valid email';
     return null;
   }
