@@ -32,4 +32,13 @@ class Validators {
     if (!allowZero && d <= 0) return 'Must be greater than 0';
     return null;
   }
+
+  static String? numberRequired(String? v,
+      {String label = 'This field', bool allowZero = true}) {
+    if (v == null || v.trim().isEmpty) return '$label is required';
+    final d = double.tryParse(v.trim());
+    if (d == null) return 'Enter a valid number';
+    if (!allowZero && d <= 0) return '$label must be greater than 0';
+    return null;
+  }
 }

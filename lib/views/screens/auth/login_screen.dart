@@ -96,11 +96,21 @@ class _LoginScreenState extends State<LoginScreen> {
                 },
               ),
               const SizedBox(height: 8),
-              TextButton(
-                onPressed: () {
-                  Navigator.pushNamed(context, AppRoutes.signup);
-                },
-                child: const Text("Don’t have an account? Sign up"),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text("Don’t have an account?"),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.pushNamedAndRemoveUntil(
+                        context,
+                        AppRoutes.signup,
+                            (_) => false,
+                      );
+                    },
+                    child: const Text('Sign up'),
+                  ),
+                ],
               ),
             ],
           ),

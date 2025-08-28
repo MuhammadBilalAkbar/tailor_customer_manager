@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../controllers/auth_controller.dart';
 import '../../routes/app_routes.dart';
+import '../widgets/customer_picker.dart';
 
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
@@ -15,14 +16,22 @@ class DashboardScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text("Tailor Dashboard"),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () async {
-              await authController.logout();
-              if (context.mounted) {
-                Navigator.pushReplacementNamed(context, AppRoutes.login);
-              }
-            },
+          Padding(
+            padding: const EdgeInsets.only(right: 8.0),
+            child: TextButton.icon(
+              onPressed: () async {
+                await authController.logout();
+                if (context.mounted) {
+                  Navigator.pushNamedAndRemoveUntil(
+                    context,
+                    AppRoutes.login,
+                        (_) => false,
+                  );
+                }
+              },
+              icon: const Icon(Icons.logout),
+              label: const Text('Logout'),
+            ),
           ),
         ],
       ),
@@ -45,16 +54,38 @@ class DashboardScreen extends StatelessWidget {
           _DashboardCard(
             title: "Orders",
             icon: Icons.shopping_bag,
-            onTap: () => Navigator.pushNamed(context, AppRoutes.orderHistory),
+            onTap: () => _pickCustomerAndGoToOrders(context),
           ),
           _DashboardCard(
             title: "Add Order",
             icon: Icons.add_shopping_cart,
-            onTap: () => Navigator.pushNamed(context, AppRoutes.addOrder),
+            onTap: () => _pickCustomerAndGoToAddOrder(context),
           ),
         ],
       ),
     );
+  }
+
+  /// Choose a customer then open per-customer Orders
+  Future<void> _pickCustomerAndGoToOrders(BuildContext context) async {
+    final navigator = Navigator.of(context); // capture before async
+    final selected = await CustomerPicker.show(context);
+    if (selected == null || !context.mounted) return;
+    navigator.pushNamed(
+      AppRoutes.customerOrders,
+      arguments: {
+        'customerId': selected.id,
+        'customerName': selected.fullName,
+      },
+    );
+  }
+
+  /// Choose a customer then open Add Order (needs customerId)
+  Future<void> _pickCustomerAndGoToAddOrder(BuildContext context) async {
+    final navigator = Navigator.of(context); // capture before async
+    final selected = await CustomerPicker.show(context);
+    if (selected == null || !context.mounted) return;
+    navigator.pushNamed(AppRoutes.addOrder, arguments: selected.id);
   }
 }
 

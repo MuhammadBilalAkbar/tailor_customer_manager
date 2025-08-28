@@ -7,15 +7,18 @@ import 'controllers/auth_controller.dart';
 import 'controllers/customer_controller.dart';
 import 'controllers/order_controller.dart';
 import 'firebase_options.dart';
+import 'models/customer_model.dart';
 import 'routes/app_routes.dart';
-import 'views/order/add_order_screen.dart';
 import 'views/screens/auth/login_screen.dart';
 import 'views/screens/auth/signup_screen.dart';
 import 'views/screens/customer/add_customer_screen.dart';
 import 'views/screens/customer/customer_details_screen.dart';
 import 'views/screens/customer/customer_list_screen.dart';
+import 'views/screens/customer/edit_customer_screen.dart';
 import 'views/screens/dashboard_screen.dart';
 import 'views/screens/home_screen.dart';
+import 'views/screens/order/add_order_screen.dart';
+import 'views/screens/order/order_history_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -62,12 +65,25 @@ class MyApp extends StatelessWidget {
               return CustomerDetailsScreen(customerId: customerId);
             },
             AppRoutes.addCustomer: (context) => const AddCustomerScreen(),
+            AppRoutes.editCustomer: (context) {
+              final customer = ModalRoute.of(context)!.settings.arguments as Customer;
+              return EditCustomerScreen(customer: customer);
+            },
             AppRoutes.addOrder: (context) {
               final customerId = ModalRoute.of(context)!.settings.arguments as String;
               return AddOrderScreen(customerId: customerId);
             },
+            AppRoutes.customerOrders: (context) {
+              final args = ModalRoute.of(context)!.settings.arguments as Map<String, String>?;
+              if (args == null || !args.containsKey('customerId')) {
+                return const Scaffold(body: Center(child: Text('Missing customerId')));
+              }
+              return OrderHistoryScreen(
+                customerId: args['customerId']!,
+                customerName: args['customerName'],
+              );
+            },
           }
-
       ),
     );
   }

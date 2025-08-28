@@ -7,6 +7,6 @@ class AppRoutes {
   static const String customerDetails = '/customer-details';
   static const String addCustomer = '/add-customer';
   static const String editCustomer = '/edit-customer';
-  static const String orderHistory = '/order-history';
-  static const String addOrder = '/add-order';
+  static const String addOrder = '/add-order';// requires String customerId
+  static const String customerOrders = '/customer-orders';// requires {customerId, customerName?}
 }

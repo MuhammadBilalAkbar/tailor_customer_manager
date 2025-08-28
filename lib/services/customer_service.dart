@@ -5,22 +5,23 @@ class CustomerService {
   final CollectionReference customersRef =
   FirebaseFirestore.instance.collection('customers');
 
-  Future<void> addCustomer(Customer customer) async {
-    await customersRef.add(customer.toMap());
-  }
-
   Future<List<Customer>> getCustomers() async {
-    final snapshot = await customersRef.get();
-    return snapshot.docs
-        .map((doc) => Customer.fromMap(doc.id, doc.data() as Map<String, dynamic>))
+    final snap = await customersRef.get();
+    return snap.docs
+        .map((d) => Customer.fromMap(d.id, d.data() as Map<String, dynamic>))
         .toList();
   }
 
-  Future<void> updateCustomer(String id, Customer customer) async {
-    await customersRef.doc(id).update(customer.toMap());
+  Future<String> addCustomer(Customer c) async {
+    final doc = await customersRef.add(c.toMap());
+    return doc.id;
   }
 
-  Future<void> deleteCustomer(String id) async {
-    await customersRef.doc(id).delete();
+  Future<void> updateCustomer(Customer c) {
+    return customersRef.doc(c.id).update(c.toMap());
+  }
+
+  Future<void> deleteCustomer(String id) {
+    return customersRef.doc(id).delete();
   }
 }

@@ -11,35 +11,34 @@ class CustomerListScreen extends StatefulWidget {
 }
 
 class _CustomerListScreenState extends State<CustomerListScreen> {
-
   @override
   void initState() {
     super.initState();
 
     final customerController = context.read<CustomerController>();
-
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       customerController.fetchCustomers();
     });
   }
 
-
-
   @override
   Widget build(BuildContext context) {
     final customerController = Provider.of<CustomerController>(context);
-
     return Scaffold(
       appBar: AppBar(
         title: const Text("Customers"),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.add),
-            onPressed: () {
-              Navigator.pushNamed(context, AppRoutes.addCustomer);
-            },
-          )
+          Padding(
+            padding: const EdgeInsets.only(right: 8.0),
+            child: TextButton.icon(
+              onPressed: () {
+                Navigator.pushNamed(context, AppRoutes.addCustomer);
+              },
+              icon: const Icon(Icons.add),
+              label: const Text('Add Customer'),
+            ),
+          ),
         ],
       ),
       body: customerController.isLoading
@@ -51,8 +50,8 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
         itemBuilder: (context, index) {
           final customer = customerController.customers[index];
           return Card(
-            margin: const EdgeInsets.symmetric(
-                horizontal: 12, vertical: 6),
+            margin:
+            const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             child: ListTile(
               leading: CircleAvatar(
                 child: Text(customer.fullName[0].toUpperCase()),
@@ -73,8 +72,8 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                   if (value == "edit") {
                     Navigator.pushNamed(
                       context,
-                      AppRoutes.addCustomer, // Or AppRoutes.editCustomer
-                      arguments: customer, // Pass full object
+                      AppRoutes.editCustomer,
+                      arguments: customer, // pass the object
                     );
                   } else if (value == "delete") {
                     await customerController.deleteCustomer(customer.id);
@@ -83,16 +82,29 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                         const SnackBar(content: Text("Customer deleted")),
                       );
                     }
+                  } else if (value == "orders") {
+                    Navigator.pushNamed(
+                      context,
+                      AppRoutes.customerOrders,
+                      arguments: {
+                        'customerId': customer.id,
+                        'customerName': customer.fullName,
+                      },
+                    );
                   }
                 },
-                itemBuilder: (context) => [
-                  const PopupMenuItem(
+                itemBuilder: (context) => const [
+                  PopupMenuItem(
                     value: "edit",
                     child: Text("Edit"),
                   ),
-                  const PopupMenuItem(
+                  PopupMenuItem(
                     value: "delete",
                     child: Text("Delete"),
+                  ),
+                  PopupMenuItem(
+                    value: "orders",
+                    child: Text("View Orders"),
                   ),
                 ],
               ),

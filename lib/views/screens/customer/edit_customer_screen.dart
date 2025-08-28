@@ -9,26 +9,43 @@ import '../../widgets/custom_button.dart';
 import '../../widgets/custom_text_field.dart';
 import '../../widgets/measurement_fields.dart';
 
-class AddCustomerScreen extends StatefulWidget {
-  const AddCustomerScreen({super.key});
+class EditCustomerScreen extends StatefulWidget {
+  final Customer customer;
+  const EditCustomerScreen({super.key, required this.customer});
 
   @override
-  State<AddCustomerScreen> createState() => _AddCustomerScreenState();
+  State<EditCustomerScreen> createState() => _EditCustomerScreenState();
 }
 
-class _AddCustomerScreenState extends State<AddCustomerScreen> {
+class _EditCustomerScreenState extends State<EditCustomerScreen> {
   final _formKey = GlobalKey<FormState>();
 
-  final fullNameController = TextEditingController();
-  final phoneController = TextEditingController();
-  final addressController = TextEditingController();
-  final chestController = TextEditingController();
-  final waistController = TextEditingController();
-  final lengthController = TextEditingController();
+  late final TextEditingController fullNameController;
+  late final TextEditingController phoneController;
+  late final TextEditingController addressController;
+  late final TextEditingController chestController;
+  late final TextEditingController waistController;
+  late final TextEditingController lengthController;
 
   String? _gender;
   String? _clothType;
   DateTime? _dob;
+
+  @override
+  void initState() {
+    super.initState();
+    final c = widget.customer;
+    fullNameController = TextEditingController(text: c.fullName);
+    phoneController    = TextEditingController(text: c.phoneNumber);
+    addressController  = TextEditingController(text: c.address);
+    chestController    = TextEditingController(text: c.chest.toString());
+    waistController    = TextEditingController(text: c.waist.toString());
+    lengthController   = TextEditingController(text: c.length.toString());
+
+    _gender    = c.gender;
+    _clothType = c.clothType;
+    _dob       = DateTime.tryParse(c.dob);
+  }
 
   @override
   void dispose() {
@@ -43,18 +60,17 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final customerController = Provider.of<CustomerController>(context);
+    final customerController = Provider.of<CustomerController>(context, listen: false);
 
     return Scaffold(
-      appBar: AppBar(title: const Text("Add New Customer")),
+      appBar: AppBar(title: const Text("Edit Customer")),
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16),
         child: Form(
           key: _formKey,
-          autovalidateMode: AutovalidateMode.disabled,
           child: ListView(
             children: [
-              // Full Name (required)
+              // Full Name
               CustomTextField(
                 controller: fullNameController,
                 label: 'Full Name',
@@ -62,7 +78,7 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
               ),
               const SizedBox(height: 12),
 
-              // Phone (required)
+              // Phone
               CustomTextField(
                 controller: phoneController,
                 label: 'Phone Number',
@@ -71,10 +87,9 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
               ),
               const SizedBox(height: 12),
 
-              // DOB (required) - inline error via FormField
+              // DOB (required) with inline validation
               FormField<DateTime>(
-                validator: (_) =>
-                _dob == null ? 'Please select Date of Birth' : null,
+                validator: (_) => _dob == null ? 'Please select Date of Birth' : null,
                 builder: (state) {
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -92,7 +107,7 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
                             if (picked != null) {
                               setState(() {
                                 _dob = picked;
-                                state.didChange(picked); // inform the FormField
+                                state.didChange(picked);
                               });
                             }
                           },
@@ -116,7 +131,7 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
               ),
               const SizedBox(height: 12),
 
-              // Address (required)
+              // Address
               CustomTextField(
                 controller: addressController,
                 label: 'Address',
@@ -124,7 +139,7 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
               ),
               const SizedBox(height: 12),
 
-              // Gender (required) - inline error via FormField
+              // Gender (required) with inline validation
               FormField<String>(
                 validator: (_) => _gender == null ? 'Please select Gender' : null,
                 builder: (state) {
@@ -141,7 +156,7 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
                               onChanged: (val) {
                                 setState(() {
                                   _gender = val;
-                                  state.didChange(val); // inform the FormField
+                                  state.didChange(val);
                                 });
                               },
                               child: Row(
@@ -197,26 +212,23 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
               const Text('Measurements', style: TextStyle(fontWeight: FontWeight.bold)),
               const SizedBox(height: 8),
 
-              // Measurements (all required now)
+              // Measurements (required)
               MeasurementFields(
                 chest: chestController,
                 waist: waistController,
                 length: lengthController,
-                requiredFields: true, // 👈 make them required
+                requiredFields: true,
               ),
               const SizedBox(height: 20),
 
-              // Save
               PrimaryButton(
-                text: 'Save Customer',
+                text: 'Update Customer',
                 onPressed: () async {
                   hideKeyboard(context);
-
-                  // One unified validation call; shows errors inline where they are.
                   if (!_formKey.currentState!.validate()) return;
 
-                  final customer = Customer(
-                    id: "",
+                  final updated = Customer(
+                    id: widget.customer.id,
                     fullName: fullNameController.text.trim(),
                     phoneNumber: phoneController.text.trim(),
                     dob: _dob!.toIso8601String(),
@@ -228,11 +240,15 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
                     length: double.parse(lengthController.text.trim()),
                   );
 
-                  await customerController.addCustomer(customer);
+                  final ok = await customerController.updateCustomer(updated);
 
                   if (!context.mounted) return;
-                  showSnack(context, "Customer added successfully");
-                  Navigator.pop(context);
+                  if (ok) {
+                    showSnack(context, "Customer updated");
+                    Navigator.pop(context);
+                  } else {
+                    showSnack(context, "Update failed", success: false);
+                  }
                 },
               ),
             ],
