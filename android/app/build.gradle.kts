@@ -8,7 +8,7 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
-android {
+android {a
     namespace = "com.example.tailor_customer_manager"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
