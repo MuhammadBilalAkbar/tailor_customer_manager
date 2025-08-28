@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:provider/provider.dart';
 
 import 'controllers/auth_controller.dart';
@@ -21,6 +22,14 @@ Future<void> main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+
+  await GoogleSignIn.instance.initialize(
+    // clientId: clientId,
+    // serverClientId: serverClientId,
+    // nonce: nonce,
+    // hostedDomain: hostedDomain,
+  );
+
   runApp(const MyApp());
 }
 

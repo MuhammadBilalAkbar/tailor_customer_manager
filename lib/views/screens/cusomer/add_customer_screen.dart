@@ -1,7 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../controllers/customer_controller.dart';
-import '../../../models/customer_model.dart';
+import '../../../../controllers/customer_controller.dart';
+import '../../../../models/customer_model.dart';
+import '../../../../core/constants.dart';
+import '../../../../core/helpers.dart';
+import '../../../../core/validators.dart';
+import '../../widgets/custom_button.dart';
+import '../../widgets/custom_text_field.dart';
+import '../../widgets/measurement_fields.dart';
 
 class AddCustomerScreen extends StatefulWidget {
   const AddCustomerScreen({super.key});
@@ -24,7 +30,16 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
   String? _clothType;
   DateTime? _dob;
 
-  final List<String> clothTypes = ["Shirt", "Trouser", "Kurta", "Coat"];
+  @override
+  void dispose() {
+    fullNameController.dispose();
+    phoneController.dispose();
+    addressController.dispose();
+    chestController.dispose();
+    waistController.dispose();
+    lengthController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -36,131 +51,125 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
         padding: const EdgeInsets.all(16.0),
         child: Form(
           key: _formKey,
-          child: SingleChildScrollView(
-            child: Column(
-              children: [
-                TextFormField(
-                  controller: fullNameController,
-                  decoration: const InputDecoration(labelText: "Full Name"),
-                  validator: (val) => val == null || val.isEmpty ? "Enter full name" : null,
+          child: ListView(
+            children: [
+              CustomTextField(
+                controller: fullNameController,
+                label: 'Full Name',
+                validator: (v) => Validators.requiredField(v, label: 'Full Name'),
+              ),
+              const SizedBox(height: 12),
+              CustomTextField(
+                controller: phoneController,
+                label: 'Phone Number',
+                keyboardType: TextInputType.phone,
+                validator: Validators.phone,
+              ),
+              const SizedBox(height: 12),
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                title: Text(
+                  _dob == null ? "Date of Birth: Not selected" : "DOB: ${formatDate(_dob!)}",
                 ),
-                TextFormField(
-                  controller: phoneController,
-                  decoration: const InputDecoration(labelText: "Phone Number"),
-                  keyboardType: TextInputType.phone,
-                  validator: (val) => val == null || val.isEmpty ? "Enter phone number" : null,
-                ),
-                const SizedBox(height: 10),
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        _dob == null
-                            ? "Date of Birth: Not selected"
-                            : "DOB: ${_dob!.day}/${_dob!.month}/${_dob!.year}",
-                      ),
-                    ),
-                    ElevatedButton(
-                      onPressed: () async {
-                        final picked = await showDatePicker(
-                          context: context,
-                          initialDate: DateTime(2000),
-                          firstDate: DateTime(1950),
-                          lastDate: DateTime.now(),
-                        );
-                        if (picked != null) {
-                          setState(() => _dob = picked);
-                        }
-                      },
-                      child: const Text("Pick Date"),
-                    ),
-                  ],
-                ),
-                TextFormField(
-                  controller: addressController,
-                  decoration: const InputDecoration(labelText: "Address"),
-                  validator: (val) => val == null || val.isEmpty ? "Enter address" : null,
-                ),
-                const SizedBox(height: 10),
-                Row(
-                  children: [
-                    const Text("Gender: "),
-                    Expanded(
-                      child: RadioGroup<String>(
-                        groupValue: _gender,
-                        onChanged: (val) => setState(() => _gender = val),
-                        child: Row(
-                          children: [
-                            Radio<String>(value: "Male"),
-                            const Text("Male"),
-                            const SizedBox(width: 16),
-                            Radio<String>(value: "Female"),
-                            const Text("Female"),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                DropdownButtonFormField<String>(
-                  initialValue: _clothType,
-                  hint: const Text("Select Cloth Type"),
-                  items: clothTypes.map((type) {
-                    return DropdownMenuItem(value: type, child: Text(type));
-                  }).toList(),
-                  onChanged: (val) => setState(() => _clothType = val),
-                  validator: (val) => val == null ? "Select cloth type" : null,
-                ),
-                const SizedBox(height: 10),
-                TextFormField(
-                  controller: chestController,
-                  decoration: const InputDecoration(labelText: "Chest (inches)"),
-                  keyboardType: TextInputType.number,
-                ),
-                TextFormField(
-                  controller: waistController,
-                  decoration: const InputDecoration(labelText: "Waist (inches)"),
-                  keyboardType: TextInputType.number,
-                ),
-                TextFormField(
-                  controller: lengthController,
-                  decoration: const InputDecoration(labelText: "Length (inches)"),
-                  keyboardType: TextInputType.number,
-                ),
-                const SizedBox(height: 20),
-                ElevatedButton(
+                trailing: ElevatedButton(
                   onPressed: () async {
-                    if (_formKey.currentState!.validate() && _dob != null && _gender != null) {
-                      final customer = Customer(
-                        id: "", // Firestore will generate ID
-                        fullName: fullNameController.text.trim(),
-                        phoneNumber: phoneController.text.trim(),
-                        dob: _dob!.toIso8601String(),
-                        address: addressController.text.trim(),
-                        gender: _gender!,
-                        clothType: _clothType!,
-                        chest: double.tryParse(chestController.text) ?? 0,
-                        waist: double.tryParse(waistController.text) ?? 0,
-                        length: double.tryParse(lengthController.text) ?? 0,
-                      );
-
-                      await customerController.addCustomer(customer);
-
-                      if (!context.mounted) return;
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text("Customer added successfully")),
-                        );
-                        Navigator.pop(context);
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text("Please fill all required fields")),
-                      );
-                    }
+                    final picked = await pickDate(context, initial: _dob);
+                    if (picked != null) setState(() => _dob = picked);
                   },
-                  child: const Text("Save Customer"),
+                  child: const Text("Pick Date"),
                 ),
-              ],
-            ),
+              ),
+              const SizedBox(height: 12),
+              CustomTextField(
+                controller: addressController,
+                label: 'Address',
+                validator: (v) => Validators.requiredField(v, label: 'Address'),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  const Text("Gender: "),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: RadioGroup<String>(
+                      groupValue: _gender,
+                      onChanged: (val) => setState(() => _gender = val),
+                      child: Row(
+                        children: AppLists.genders.map((g) {
+                          return Padding(
+                            padding: const EdgeInsets.only(right: 16),
+                            child: Row(
+                              children: [
+                                Radio<String>(value: g),
+                                Text(g),
+                              ],
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              DropdownButtonFormField<String>(
+                initialValue: _clothType,
+                decoration: const InputDecoration(
+                  labelText: 'Cloth Type',
+                  border: OutlineInputBorder(),
+                  isDense: true,
+                ),
+                items: AppLists.clothTypes
+                    .map((t) => DropdownMenuItem(value: t, child: Text(t)))
+                    .toList(),
+                onChanged: (val) => setState(() => _clothType = val),
+                validator: (val) => val == null ? 'Select cloth type' : null,
+              ),
+              const SizedBox(height: 16),
+              const Text('Measurements', style: TextStyle(fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              MeasurementFields(
+                chest: chestController,
+                waist: waistController,
+                length: lengthController,
+              ),
+              const SizedBox(height: 20),
+              PrimaryButton(
+                text: 'Save Customer',
+                onPressed: () async {
+                  hideKeyboard(context);
+
+                  if (_dob == null) {
+                    showSnack(context, 'Please select Date of Birth', success: false);
+                    return;
+                  }
+                  if (_gender == null) {
+                    showSnack(context, 'Please select Gender', success: false);
+                    return;
+                  }
+                  if (!_formKey.currentState!.validate()) return;
+
+                  final customer = Customer(
+                    id: "",
+                    fullName: fullNameController.text.trim(),
+                    phoneNumber: phoneController.text.trim(),
+                    dob: _dob!.toIso8601String(),
+                    address: addressController.text.trim(),
+                    gender: _gender!,
+                    clothType: _clothType!,
+                    chest: parseDoubleOrZero(chestController.text),
+                    waist: parseDoubleOrZero(waistController.text),
+                    length: parseDoubleOrZero(lengthController.text),
+                  );
+
+                  await customerController.addCustomer(customer);
+
+                  if (!context.mounted) return;
+                  showSnack(context, "Customer added successfully");
+                  Navigator.pop(context);
+                },
+              ),
+            ],
           ),
         ),
       ),

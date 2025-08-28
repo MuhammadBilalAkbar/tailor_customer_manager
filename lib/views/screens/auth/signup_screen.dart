@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../controllers/auth_controller.dart';
-import '../../../routes/app_routes.dart';
+import '../../../../controllers/auth_controller.dart';
+import '../../../../routes/app_routes.dart';
+import '../../../../core/validators.dart';
+import '../../../../core/helpers.dart';
+import '../../widgets/custom_button.dart';
+import '../../widgets/custom_text_field.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -11,6 +15,7 @@ class SignupScreen extends StatefulWidget {
 }
 
 class _SignupScreenState extends State<SignupScreen> {
+  final formKey = GlobalKey<FormState>();
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
 
@@ -29,37 +34,70 @@ class _SignupScreenState extends State<SignupScreen> {
       appBar: AppBar(title: const Text("Sign Up")),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            TextField(controller: emailController, decoration: const InputDecoration(labelText: "Email")),
-            TextField(controller: passwordController, decoration: const InputDecoration(labelText: "Password"), obscureText: true),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: authController.isLoading
-                  ? null
-                  : () async {
-                final success = await authController.signUp(
-                  emailController.text.trim(),
-                  passwordController.text.trim(),
-                );
+        child: Form(
+          key: formKey,
+          child: ListView(
+            children: [
+              CustomTextField(
+                controller: emailController,
+                label: 'Email',
+                keyboardType: TextInputType.emailAddress,
+                validator: Validators.email,
+              ),
+              const SizedBox(height: 12),
+              CustomTextField(
+                controller: passwordController,
+                label: 'Password',
+                obscure: true,
+                validator: Validators.password,
+              ),
+              const SizedBox(height: 20),
+              PrimaryButton(
+                text: 'Sign Up',
+                isLoading: authController.isLoading,
+                onPressed: () async {
+                  hideKeyboard(context);
+                  if (!formKey.currentState!.validate()) return;
 
-                if (!context.mounted) return;
-
-                if (success) {
-                  Navigator.pushReplacementNamed(context, AppRoutes.dashboard);
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("Signup Failed")),
+                  final ok = await authController.signUp(
+                    emailController.text.trim(),
+                    passwordController.text.trim(),
                   );
-                  debugPrint("Signup Failed");
-                }
-              },
-              child: authController.isLoading
-                  ? const CircularProgressIndicator()
-                  : const Text("Sign Up"),
-            ),
 
-          ],
+                  if (!context.mounted) return;
+                  if (ok) {
+                    Navigator.pushReplacementNamed(context, AppRoutes.dashboard);
+                  } else {
+                    showSnack(
+                      context,
+                      authController.lastError ?? 'Signup Failed',
+                      success: false,
+                    );
+                  }
+                },
+
+              ),
+              const SizedBox(height: 12),
+              OutlinedButton.icon(
+                icon: const Icon(Icons.login),
+                label: const Text('Continue with Google'),
+                onPressed: authController.isLoading
+                    ? null
+                    : () async {
+                  final ok =
+                  await context.read<AuthController>().loginWithGoogle();
+                  if (!context.mounted) return;
+                  if (ok) {
+                    Navigator.pushReplacementNamed(
+                        context, AppRoutes.dashboard);
+                  } else {
+                    showSnack(context, 'Google sign-in failed',
+                        success: false);
+                  }
+                },
+              ),
+            ],
+          ),
         ),
       ),
     );
