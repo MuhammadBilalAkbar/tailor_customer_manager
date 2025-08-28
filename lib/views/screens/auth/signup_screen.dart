@@ -15,6 +15,13 @@ class _SignupScreenState extends State<SignupScreen> {
   final passwordController = TextEditingController();
 
   @override
+  void dispose() {
+    emailController.dispose();
+    passwordController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final authController = Provider.of<AuthController>(context);
 
@@ -35,14 +42,23 @@ class _SignupScreenState extends State<SignupScreen> {
                   emailController.text.trim(),
                   passwordController.text.trim(),
                 );
-                if (success && mounted) {
+
+                if (!context.mounted) return;
+
+                if (success) {
                   Navigator.pushReplacementNamed(context, AppRoutes.dashboard);
                 } else {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Signup Failed")));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text("Signup Failed")),
+                  );
+                  debugPrint("Signup Failed");
                 }
               },
-              child: authController.isLoading ? const CircularProgressIndicator() : const Text("Sign Up"),
+              child: authController.isLoading
+                  ? const CircularProgressIndicator()
+                  : const Text("Sign Up"),
             ),
+
           ],
         ),
       ),

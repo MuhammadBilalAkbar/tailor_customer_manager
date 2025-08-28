@@ -35,14 +35,22 @@ class _LoginScreenState extends State<LoginScreen> {
                   emailController.text.trim(),
                   passwordController.text.trim(),
                 );
-                if (success && mounted) {
+
+                if (!context.mounted) return;
+
+                if (success) {
                   Navigator.pushReplacementNamed(context, AppRoutes.dashboard);
                 } else {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Login Failed")));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text("Login Failed")),
+                  );
                 }
               },
-              child: authController.isLoading ? const CircularProgressIndicator() : const Text("Login"),
+              child: authController.isLoading
+                  ? const CircularProgressIndicator()
+                  : const Text("Login"),
             ),
+
             TextButton(
               onPressed: () {
                 Navigator.pushNamed(context, AppRoutes.signup);

@@ -22,29 +22,30 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _checkLogin() async {
+    final auth = context.read<AuthController>();
+    final navigator = Navigator.of(context);
+
     final prefs = await SharedPreferences.getInstance();
     final email = prefs.getString('email');
     final password = prefs.getString('password');
 
-    if (email != null && password != null) {
-      // Try auto-login
-      final authController = Provider.of<AuthController>(context, listen: false);
-      final success = await authController.login(email, password);
-
-      if (success && mounted) {
-        Navigator.pushReplacementNamed(context, AppRoutes.dashboard);
-      } else {
-        Navigator.pushReplacementNamed(context, AppRoutes.login);
-      }
-    } else {
-      // No saved credentials → go to login
-      Navigator.pushReplacementNamed(context, AppRoutes.login);
-    }
-
-    if (mounted) {
+    if (email == null || password == null) {
+      if (!mounted) return;
+      navigator.pushReplacementNamed(AppRoutes.login);
       setState(() => _isChecking = false);
+      return;
     }
+
+    final success = await auth.login(email, password);
+
+    if (!mounted) return;
+
+    navigator.pushReplacementNamed(
+      success ? AppRoutes.dashboard : AppRoutes.login,
+    );
+    setState(() => _isChecking = false);
   }
+
 
   @override
   Widget build(BuildContext context) {

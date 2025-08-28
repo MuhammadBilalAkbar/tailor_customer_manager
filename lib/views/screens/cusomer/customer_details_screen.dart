@@ -15,18 +15,15 @@ class CustomerDetailsScreen extends StatefulWidget {
   State<CustomerDetailsScreen> createState() => _CustomerDetailsScreenState();
 }
 
-class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
-  @override
-  void initState() {
-    super.initState();
+class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {@override
+void initState() {
+  super.initState();
+  final orderController = context.read<OrderController>();
+  orderController.fetchOrders(widget.customerId);
+}
 
-    // Fetch orders for this customer
-    Future.microtask(() =>
-        Provider.of<OrderController>(context, listen: false)
-            .fetchOrders(widget.customerId));
-  }
 
-  @override
+@override
   Widget build(BuildContext context) {
     final customerController = Provider.of<CustomerController>(context);
     final orderController = Provider.of<OrderController>(context);

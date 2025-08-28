@@ -86,27 +86,24 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
                   children: [
                     const Text("Gender: "),
                     Expanded(
-                      child: Row(
-                        children: [
-                          Radio<String>(
-                            value: "Male",
-                            groupValue: _gender,
-                            onChanged: (val) => setState(() => _gender = val),
-                          ),
-                          const Text("Male"),
-                          Radio<String>(
-                            value: "Female",
-                            groupValue: _gender,
-                            onChanged: (val) => setState(() => _gender = val),
-                          ),
-                          const Text("Female"),
-                        ],
+                      child: RadioGroup<String>(
+                        groupValue: _gender,
+                        onChanged: (val) => setState(() => _gender = val),
+                        child: Row(
+                          children: [
+                            Radio<String>(value: "Male"),
+                            const Text("Male"),
+                            const SizedBox(width: 16),
+                            Radio<String>(value: "Female"),
+                            const Text("Female"),
+                          ],
+                        ),
                       ),
                     ),
                   ],
                 ),
                 DropdownButtonFormField<String>(
-                  value: _clothType,
+                  initialValue: _clothType,
                   hint: const Text("Select Cloth Type"),
                   items: clothTypes.map((type) {
                     return DropdownMenuItem(value: type, child: Text(type));
@@ -149,12 +146,11 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
 
                       await customerController.addCustomer(customer);
 
-                      if (mounted) {
+                      if (!context.mounted) return;
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(content: Text("Customer added successfully")),
                         );
                         Navigator.pop(context);
-                      }
                     } else {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text("Please fill all required fields")),

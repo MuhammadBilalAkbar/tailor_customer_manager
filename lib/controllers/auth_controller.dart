@@ -52,8 +52,10 @@ class AuthController extends ChangeNotifier {
       }
       _isLoading = false;
       notifyListeners();
+      debugPrint("AuthController signup successful.");
       return false;
     } catch (e) {
+      debugPrint("AuthController signup error: $e");
       _isLoading = false;
       notifyListeners();
       return false;

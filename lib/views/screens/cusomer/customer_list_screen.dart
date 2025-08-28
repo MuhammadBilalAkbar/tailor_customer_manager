@@ -11,13 +11,20 @@ class CustomerListScreen extends StatefulWidget {
 }
 
 class _CustomerListScreenState extends State<CustomerListScreen> {
+
   @override
   void initState() {
     super.initState();
-    // Fetch customers when screen loads
-    Future.microtask(() =>
-        Provider.of<CustomerController>(context, listen: false).fetchCustomers());
+
+    final customerController = context.read<CustomerController>();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      customerController.fetchCustomers();
+    });
   }
+
+
 
   @override
   Widget build(BuildContext context) {
