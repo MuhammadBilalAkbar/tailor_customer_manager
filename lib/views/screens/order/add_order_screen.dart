@@ -1,7 +1,218 @@
+// import 'package:flutter/material.dart';
+// import 'package:provider/provider.dart';
+//
+// import '../../../controllers/order_controller.dart';
+// import '../../../models/order_model.dart';
+//
+// class AddOrderScreen extends StatefulWidget {
+//   final String customerId;
+//
+//   const AddOrderScreen({super.key, required this.customerId});
+//
+//   @override
+//   State<AddOrderScreen> createState() => _AddOrderScreenState();
+// }
+//
+// class _AddOrderScreenState extends State<AddOrderScreen> {
+//   final _formKey = GlobalKey<FormState>();
+//
+//   DateTime _orderDate = DateTime.now();
+//   DateTime _deliveryDate = DateTime.now().add(const Duration(days: 7));
+//   String _status = 'Pending';
+//   final TextEditingController _notesCtrl = TextEditingController();
+//
+//   // local saving flag for overlay spinner
+//   bool _saving = false;
+//
+//   Future<void> _pickDate({required bool isOrderDate}) async {
+//     final initial = isOrderDate ? _orderDate : _deliveryDate;
+//     final picked = await showDatePicker(
+//       context: context,
+//       initialDate: initial,
+//       firstDate: DateTime(2000),
+//       lastDate: DateTime(2100),
+//     );
+//     if (picked != null) {
+//       setState(() {
+//         if (isOrderDate) {
+//           _orderDate = picked;
+//           if (_deliveryDate.isBefore(_orderDate)) {
+//             _deliveryDate = _orderDate;
+//           }
+//         } else {
+//           _deliveryDate = picked;
+//         }
+//       });
+//     }
+//   }
+//
+//   String _fmt(DateTime d) =>
+//       "${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}";
+//
+//   @override
+//   void dispose() {
+//     _notesCtrl.dispose();
+//     super.dispose();
+//   }
+//
+//   @override
+//   Widget build(BuildContext context) {
+//     final orderController = Provider.of<OrderController>(context, listen: false);
+//
+//     return Scaffold(
+//       appBar: AppBar(title: const Text('Add Order')),
+//       body: Stack(
+//         children: [
+//           Padding(
+//             padding: const EdgeInsets.all(16),
+//             child: Form(
+//               key: _formKey,
+//               child: ListView(
+//                 children: [
+//                   // Order Date
+//                   ListTile(
+//                     contentPadding: EdgeInsets.zero,
+//                     title: const Text('Order Date'),
+//                     subtitle: Text(_fmt(_orderDate)),
+//                     trailing: IconButton(
+//                       icon: const Icon(Icons.date_range),
+//                       onPressed: () => _pickDate(isOrderDate: true),
+//                     ),
+//                   ),
+//                   const SizedBox(height: 8),
+//
+//                   // Delivery Date
+//                   ListTile(
+//                     contentPadding: EdgeInsets.zero,
+//                     title: const Text('Delivery Date'),
+//                     subtitle: Text(_fmt(_deliveryDate)),
+//                     trailing: IconButton(
+//                       icon: const Icon(Icons.date_range),
+//                       onPressed: () => _pickDate(isOrderDate: false),
+//                     ),
+//                   ),
+//                   const SizedBox(height: 12),
+//
+//                   // Status
+//                   DropdownButtonFormField<String>(
+//                     initialValue: _status,
+//                     decoration: const InputDecoration(
+//                       labelText: 'Status',
+//                       border: OutlineInputBorder(),
+//                     ),
+//                     items: const [
+//                       DropdownMenuItem(value: 'Pending', child: Text('Pending')),
+//                       DropdownMenuItem(value: 'Completed', child: Text('Completed')),
+//                     ],
+//                     onChanged: (v) => setState(() => _status = v ?? 'Pending'),
+//                   ),
+//                   const SizedBox(height: 12),
+//
+//                   // Notes
+//                   TextFormField(
+//                     controller: _notesCtrl,
+//                     maxLines: 4,
+//                     decoration: const InputDecoration(
+//                       labelText: 'Notes',
+//                       hintText: 'Add any special instructions or details…',
+//                       border: OutlineInputBorder(),
+//                     ),
+//                   ),
+//                   const SizedBox(height: 20),
+//
+//                   // Save
+//                   SizedBox(
+//                     width: double.infinity,
+//                     child: ElevatedButton.icon(
+//                       icon: _saving
+//                           ? const SizedBox(
+//                         width: 18,
+//                         height: 18,
+//                         child: CircularProgressIndicator(strokeWidth: 2),
+//                       )
+//                           : const Icon(Icons.save),
+//                       label: Text(_saving ? 'Saving...' : 'Save Order'),
+//                       onPressed: _saving
+//                           ? null
+//                           : () async {
+//                         // Basic validation: delivery >= order date
+//                         if (_deliveryDate.isBefore(_orderDate)) {
+//                           ScaffoldMessenger.of(context).showSnackBar(
+//                             const SnackBar(
+//                               content: Text(
+//                                   'Delivery date cannot be before order date'),
+//                             ),
+//                           );
+//                           return;
+//                         }
+//
+//                         final navigator = Navigator.of(context);
+//                         final messenger = ScaffoldMessenger.of(context);
+//
+//                         final order = Order(
+//                           id: '',
+//                           customerId: widget.customerId,
+//                           orderDate: _orderDate,
+//                           deliveryDate: _deliveryDate,
+//                           status: _status,
+//                           notes: _notesCtrl.text.trim(),
+//                         );
+//
+//                         setState(() => _saving = true);
+//
+//                         bool ok;
+//                         try {
+//                           await orderController.addOrder(order);
+//                           ok = true;
+//                         } catch (_) {
+//                           ok = false;
+//                         }
+//
+//                         if (!mounted) return;
+//                         setState(() => _saving = false);
+//
+//                         if (ok) {
+//                           messenger.hideCurrentSnackBar();
+//                           messenger.showSnackBar(
+//                             const SnackBar(content: Text('Order added')),
+//                           );
+//                           navigator.pop();
+//                         } else {
+//                           messenger.hideCurrentSnackBar();
+//                           messenger.showSnackBar(
+//                             const SnackBar(
+//                                 content: Text('Failed to add order')),
+//                           );
+//                         }
+//                       },
+//                     ),
+//                   ),
+//                 ],
+//               ),
+//             ),
+//           ),
+//
+//           // Full-screen overlay while saving
+//           if (_saving) ...[
+//             ModalBarrier(
+//               dismissible: false,
+//               color: Colors.black.withValues(alpha: 0.05),
+//             ),
+//             const Center(child: CircularProgressIndicator()),
+//           ],
+//         ],
+//       ),
+//     );
+//   }
+// }
+
+
+// lib/views/order/add_order_screen.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../controllers/order_controller.dart';
+import '../../../core/constants.dart';
 import '../../../models/order_model.dart';
 
 class AddOrderScreen extends StatefulWidget {
@@ -18,10 +229,9 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
 
   DateTime _orderDate = DateTime.now();
   DateTime _deliveryDate = DateTime.now().add(const Duration(days: 7));
-  String _status = 'Pending';
+  String _status = AppLists.orderStatuses.first;
   final TextEditingController _notesCtrl = TextEditingController();
 
-  // local saving flag for overlay spinner
   bool _saving = false;
 
   Future<void> _pickDate({required bool isOrderDate}) async {
@@ -57,14 +267,15 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final orderController = Provider.of<OrderController>(context, listen: false);
+    final orderController = context.read<OrderController>();
 
     return Scaffold(
+      backgroundColor: AppColors.surface,
       appBar: AppBar(title: const Text('Add Order')),
       body: Stack(
         children: [
           Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(Gaps.md),
             child: Form(
               key: _formKey,
               child: ListView(
@@ -72,26 +283,26 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
                   // Order Date
                   ListTile(
                     contentPadding: EdgeInsets.zero,
-                    title: const Text('Order Date'),
-                    subtitle: Text(_fmt(_orderDate)),
+                    title: const Text('Order Date', style: TextStyle(color: AppColors.text)),
+                    subtitle: Text(_fmt(_orderDate), style: const TextStyle(color: AppColors.text)),
                     trailing: IconButton(
                       icon: const Icon(Icons.date_range),
                       onPressed: () => _pickDate(isOrderDate: true),
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: Gaps.xs),
 
                   // Delivery Date
                   ListTile(
                     contentPadding: EdgeInsets.zero,
-                    title: const Text('Delivery Date'),
-                    subtitle: Text(_fmt(_deliveryDate)),
+                    title: const Text('Delivery Date', style: TextStyle(color: AppColors.text)),
+                    subtitle: Text(_fmt(_deliveryDate), style: const TextStyle(color: AppColors.text)),
                     trailing: IconButton(
                       icon: const Icon(Icons.date_range),
                       onPressed: () => _pickDate(isOrderDate: false),
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: Gaps.sm),
 
                   // Status
                   DropdownButtonFormField<String>(
@@ -100,13 +311,12 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
                       labelText: 'Status',
                       border: OutlineInputBorder(),
                     ),
-                    items: const [
-                      DropdownMenuItem(value: 'Pending', child: Text('Pending')),
-                      DropdownMenuItem(value: 'Completed', child: Text('Completed')),
-                    ],
-                    onChanged: (v) => setState(() => _status = v ?? 'Pending'),
+                    items: AppLists.orderStatuses
+                        .map((s) => DropdownMenuItem(value: s, child: Text(s)))
+                        .toList(),
+                    onChanged: (v) => setState(() => _status = v ?? AppLists.orderStatuses.first),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: Gaps.sm),
 
                   // Notes
                   TextFormField(
@@ -116,9 +326,10 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
                       labelText: 'Notes',
                       hintText: 'Add any special instructions or details…',
                       border: OutlineInputBorder(),
+                      isDense: true,
                     ),
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: Gaps.lg),
 
                   // Save
                   SizedBox(
@@ -126,8 +337,7 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
                     child: ElevatedButton.icon(
                       icon: _saving
                           ? const SizedBox(
-                        width: 18,
-                        height: 18,
+                        width: 18, height: 18,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
                           : const Icon(Icons.save),
@@ -135,19 +345,23 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
                       onPressed: _saving
                           ? null
                           : () async {
-                        // Basic validation: delivery >= order date
+                        // Capture BEFORE any await — safe across async gaps
+                        final messenger = ScaffoldMessenger.of(context);
+                        final navigator = Navigator.of(context);
+
+                        // Local validation — can use messenger (no await yet)
                         if (_deliveryDate.isBefore(_orderDate)) {
-                          ScaffoldMessenger.of(context).showSnackBar(
+                          messenger.clearSnackBars();
+                          messenger.showSnackBar(
                             const SnackBar(
-                              content: Text(
-                                  'Delivery date cannot be before order date'),
+                              content: Text('Delivery date cannot be before order date'),
+                              backgroundColor: AppColors.danger,
+                              behavior: SnackBarBehavior.floating,
+                              duration: Times.snack,
                             ),
                           );
                           return;
                         }
-
-                        final navigator = Navigator.of(context);
-                        final messenger = ScaffoldMessenger.of(context);
 
                         final order = Order(
                           id: '',
@@ -160,29 +374,23 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
 
                         setState(() => _saving = true);
 
-                        bool ok;
-                        try {
-                          await orderController.addOrder(order);
-                          ok = true;
-                        } catch (_) {
-                          ok = false;
-                        }
+                        final ok = await orderController.addOrder(order);
 
                         if (!mounted) return;
                         setState(() => _saving = false);
 
+                        messenger.clearSnackBars();
+                        messenger.showSnackBar(
+                          SnackBar(
+                            content: Text(ok ? 'Order added' : 'Failed to add order'),
+                            backgroundColor: ok ? AppColors.success : AppColors.danger,
+                            behavior: SnackBarBehavior.floating,
+                            duration: Times.snack,
+                          ),
+                        );
+
                         if (ok) {
-                          messenger.hideCurrentSnackBar();
-                          messenger.showSnackBar(
-                            const SnackBar(content: Text('Order added')),
-                          );
                           navigator.pop();
-                        } else {
-                          messenger.hideCurrentSnackBar();
-                          messenger.showSnackBar(
-                            const SnackBar(
-                                content: Text('Failed to add order')),
-                          );
                         }
                       },
                     ),
