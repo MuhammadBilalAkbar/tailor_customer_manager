@@ -112,6 +112,7 @@
 
 
 // lib/controllers/auth_controller.dart
+// lib/controllers/auth_controller.dart
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -155,6 +156,39 @@ class AuthController extends ChangeNotifier {
       await prefs.setString(_kPassword, password);
     }
   }
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // Public helpers for HomeScreen / boot flow
+  // ──────────────────────────────────────────────────────────────────────────
+
+  /// Fix 1: Prefer the existing Firebase user instead of re-logging.
+  bool get isAlreadyLoggedIn => _authService.isLoggedIn;
+
+  /// Fix 1 + Fix 2:
+  /// If a Firebase user is present, returns true.
+  /// Else, tries saved email/password from SharedPreferences and attempts login.
+  /// Returns true on success, false otherwise (and sets lastError on failure).
+  Future<bool> signInIfNeededFromPrefs() async {
+    if (_authService.isLoggedIn) {
+      _lastError = null;
+      return true;
+    }
+
+    final prefs = await SharedPreferences.getInstance();
+    final email = prefs.getString(_kEmail);
+    final password = prefs.getString(_kPassword);
+
+    if (email == null || password == null) {
+      _lastError = null; // Not an error: just no saved creds
+      return false;
+    }
+
+    return await login(email, password);
+  }
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // Email / Password flows
+  // ──────────────────────────────────────────────────────────────────────────
 
   Future<bool> login(String email, String password) async {
     _setLoading(true);
@@ -204,7 +238,7 @@ class AuthController extends ChangeNotifier {
     }
   }
 
-  // Kept for compatibility. You can ignore if not using Google right now.
+  // Kept for compatibility.
   Future<bool> loginWithGoogle() async {
     _setLoading(true);
     try {

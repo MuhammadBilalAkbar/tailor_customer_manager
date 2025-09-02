@@ -64,6 +64,7 @@
 
 
 // lib/services/auth_service.dart
+// lib/services/auth_service.dart
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter/foundation.dart';
@@ -85,10 +86,10 @@ class AuthService {
       return cred.user;
     } on FirebaseAuthException catch (e) {
       debugPrint('Signup error: ${e.code}');
-      rethrow; // Let controller map the code via mapAuthError
+      rethrow;
     } catch (e) {
       debugPrint('Signup error: $e');
-      rethrow; // Non-Firebase error
+      rethrow;
     }
   }
 
@@ -109,14 +110,10 @@ class AuthService {
   }
 
   // ──────────────────────────────────────────────────────────────────────────
-  // Google Sign-In (kept as-is per your request)
-  // Requires: google_sign_in >= 7.x with authenticate()
+  // Google Sign-In (kept as-is)
   // ──────────────────────────────────────────────────────────────────────────
   Future<User?> signInWithGoogle() async {
-    // Interactive flow; throws on cancel/error
     final GoogleSignInAccount account = await _googleSignIn.authenticate();
-
-    // v7 provides only idToken (no await here)
     final GoogleSignInAuthentication googleAuth = account.authentication;
 
     final credential = GoogleAuthProvider.credential(
@@ -131,14 +128,11 @@ class AuthService {
   // Logout
   // ──────────────────────────────────────────────────────────────────────────
   Future<void> logout() async {
-    // Best-effort Google sign-out (safe even if not signed in)
     try {
       await _googleSignIn.signOut();
     } catch (e) {
       debugPrint('Google sign-out error: $e');
     }
-
-    // Single Firebase sign-out
     await _firebaseAuth.signOut();
   }
 
@@ -146,4 +140,6 @@ class AuthService {
   // Convenience
   // ──────────────────────────────────────────────────────────────────────────
   User? get currentUser => _firebaseAuth.currentUser;
+
+  bool get isLoggedIn => _firebaseAuth.currentUser != null;
 }
